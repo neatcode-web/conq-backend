@@ -5,10 +5,10 @@ module.exports = {
   signAccessToken: (userId) => {
     return new Promise((resolve, reject) => {
       const payload = {}
-      const secret = 'jwtSecretKey'
+      const secret = config.jwtSecretKey
       const options = {
         expiresIn: '1h',
-        issuer: 'pickurpage.com',
+        issuer: 'dev.agrtech.com.au',
         audience: userId,
       }
       JWT.sign(payload, secret, options, (err, token) => {
