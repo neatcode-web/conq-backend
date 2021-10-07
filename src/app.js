@@ -1,7 +1,8 @@
 import express from "express";
 import bodyParser from "body-parser";
-const app = express();
 import config from "./config";
+
+const app = express();
 
 app.use(bodyParser.json());
 app.set("port", config.port);

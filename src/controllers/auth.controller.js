@@ -3,7 +3,7 @@ import { getConnection, querys, sql } from "../database";
 import { validationResult } from 'express-validator';
 import bcrypt from 'bcrypt'
 import { success, error, validation } from "../responseApi";
-
+import { signAccessToken } from '../middleware/authMiddleware'
 async function signIn(req, res){
     /**
      * @param
@@ -19,12 +19,12 @@ async function signIn(req, res){
     try {
         const pool = await getConnection();
         const { username, password } = req.body 
-        const result = await pool
+        const { recordset } = await pool
           .request()
           .input("username", username)
           .query(querys.getUserByUserName);
         //New User
-        if( result.recordsets.length === 0 ){
+        if( recordset.length === 0 ){
             await pool
                 .request()
                 .input("username", sql.VarChar, username)
@@ -35,7 +35,7 @@ async function signIn(req, res){
             const response = {
                 user: {
                     username: username,
-                    branch: branch
+                    branch: null
                 }
             }
             res
@@ -49,17 +49,18 @@ async function signIn(req, res){
                         .input("username", username)
                         .input("password", password)
                         .query(querys.getUserByIdAndPassword);
-            
-            if( result.recordsets.length === 0 ){
+            console.log(result)
+            if( recordset.length === 0 ){
                 res
                 .status(422)
                 .json(validation({ password: "Incorrect Password" }));
             }
             else{
                 //generate jwt and response with success
+                const accessToken = await signAccessToken(recordset[0].ID)
                 res
                 .status(200)
-                .json(success("OK", { data: {} }, res.statusCode));
+                .json(success("OK", { data: {accessToken} }, res.statusCode));
             }
         }
 
