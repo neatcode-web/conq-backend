@@ -1,6 +1,6 @@
 import JWT from 'jsonwebtoken'
 import createError from 'http-errors'
-import { jwtSecretKey } from '../config'
+import config from '../config'
 module.exports = {
   signAccessToken: (userId) => {
     return new Promise((resolve, reject) => {
@@ -26,7 +26,7 @@ module.exports = {
     const authHeader = req.headers['authorization']
     const bearerToken = authHeader.split(' ')
     const token = bearerToken[1]
-    JWT.verify(token, jwtSecretKey, (err, payload) => {
+    JWT.verify(token, config.jwtSecretKey, (err, payload) => {
       if (err) {
         const message =
           err.name === 'JsonWebTokenError' ? 'Unauthorized' : err.message

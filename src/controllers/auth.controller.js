@@ -32,10 +32,13 @@ async function signIn(req, res){
                 .input("password", sql.VarChar, password)
                 .query(querys.addNewUser);
             //generate jwt and response with success
+            const accessToken = await signAccessToken(recordset[0].ID)
+
             const response = {
                 user: {
                     username: username,
-                    branch: null
+                    branch: null,
+                    accessToken: accessToken
                 }
             }
             res
