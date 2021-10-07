@@ -18,29 +18,55 @@ async function signIn(req, res){
 
     try {
         const pool = await getConnection();
-    
+        const { username, password } = req.body 
         const result = await pool
           .request()
-          .input("username", req.params.username)
+          .input("username", username)
           .query(querys.getUserByUserName);
-        return res.json(result.recordset[0]);
+        //New User
+        if( result.recordsets.length === 0 ){
+            await pool
+                .request()
+                .input("username", sql.VarChar, username)
+                .input("branch", sql.VarChar, null)
+                .input("password", sql.VarChar, password)
+                .query(querys.addNewUser);
+            //generate jwt and response with success
+            const response = {
+                user: {
+                    username: username,
+                    branch: branch
+                }
+            }
+            res
+            .status(200)
+            .json(success("OK", { data: response }, res.statusCode));
+        }
+        else{
+            //existing User
+            const result = await pool
+                        .request()
+                        .input("username", username)
+                        .input("password", password)
+                        .query(querys.getUserByIdAndPassword);
+            
+            if( result.recordsets.length === 0 ){
+                res
+                .status(422)
+                .json(validation({ password: "Incorrect Password" }));
+            }
+            else{
+                //generate jwt and response with success
+                res
+                .status(200)
+                .json(success("OK", { data: {} }, res.statusCode));
+            }
+        }
+
     } catch (error) {
         res.status(500);
         res.send(error.message);
     }
-    const salt = await bcrypt.genSalt();
-    const password = await (await bcrypt).hash( req.body.password, salt )
-
-    res.status(200).json({
-        message: "Success on Sign In",
-        result: 1,
-        data:[
-            {
-                "salt": salt,
-                "password": password
-            }
-        ]
-    });
 }
 
 module.exports = {
